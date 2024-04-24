@@ -1,11 +1,8 @@
 from tensorflow.keras import Model, Input, layers
 from tensorflow.keras.layers import TextVectorization, Embedding, Bidirectional, LSTM, Conv1D, GlobalMaxPooling1D, Dense, Dropout
 
-import re
 import pandas as pd
 import tensorflow as tf
-import tensorflow_text as tf_text
-
 
 
 # -----------------------Code for LLM-----------------------------------
