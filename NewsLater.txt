@@ -1,3 +1,22 @@
 #### Jour 1
 
-Split des données
+Split & Merge des données
+Formatage & Prétraitement des données 
+Choix des modèles pour les benchmark 
+
+npm install tailwindcss
+npx tailwindcss init
+
+
+// next.config.js
+const withCSS = require('@zeit/next-css');
+module.exports = withCSS();
+
+
+npm install @zeit/next-css
+
+
+/* global.css */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
