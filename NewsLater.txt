@@ -1,22 +1,3 @@
 #### Jour 1
 
 Split des données
-Répartition des tâches
-
-
-Traitement du data set 1
-    Séparation du DataSet et isolation des données importantes
-Traitement du data set 2 
-    Séparation du DataSet et isolation des données importantes
-    Merge avec le DataSet 1
-Comme le DataSet 1 est biaisé, nous avons choisi de l'utilisé uniquement pour des analyses de pourquoi il étiat biaisé 
-    et comment cela nous montre des erreurs a ne pas faire.
-
-Création d'un Réseau FNN, avec 3 couches (2 relu + une sigmoïd)
-    ~87%-95% d'acc avec le modèle.
-    Lors de l'apparition du nouveau DataSet, l'accuracy est tomber autour de 65%
-        Le fait qu'il soit pas biaisé, rend l'apprentissage plus difficile
-    Je me suis rendu compte d'une erreur que j'avais faite, j'ai mis 2 noeuds par layers cachés.
-    Ce qui limite grandement les possibilitées avec pour le modèle
-
- 
