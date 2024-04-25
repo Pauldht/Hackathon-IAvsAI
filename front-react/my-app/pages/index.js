@@ -3,46 +3,36 @@ import Image from "next/image";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 import React, { useState, useEffect } from "react";
-import { exec } from 'child_process';
+import axios from 'axios';
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
-
-  const [percentages, setPercentages] = useState([null, null, null, null]);
-  const [loading, setLoading] = useState(false); // Nouvel état pour gérer le chargement
-  const [output, setOutput] = useState('');
+  const [predictions, setPredictions] = useState({ xgb: null, fnn: null, lr: null, llm: null });
+  const [loading, setLoading] = useState(false);
 
   const loadData = () => {
-    setLoading(true); // Marquez le début du chargement
-    const loadedPercentages = [70, 85, 60, 95]; // Exemple de pourcentages chargés
-    setPercentages(loadedPercentages);
-    setTimeout(() => setLoading(false), 1000); // Marquez la fin du chargement après une seconde (simulation)
+    setLoading(true);
+    const loadedPredictions = { xgb: 1, fnn: 0, lr: 1, llm: 0 }; // Remplacez par vos prédictions réelles
+    setPredictions(loadedPredictions);
+    setTimeout(() => setLoading(false), 1000);
   };
 
   const runPythonScript = async () => {
-    const child_process = require('child_process');
-    const util = require('util');
-    const execAsync = util.promisify(child_process.exec);
-  
     try {
-      const { stdout, stderr } = await execAsync('python3 testHW.py');
-      console.log('Résultat du script Python :', stdout);
-      if (stderr) {
-        console.error('Erreur lors de l\'exécution du script Python :', stderr);
-      }
+      const response = await axios.get("http://127.0.0.1:8000/test");
+      setPredictions(response.data);
     } catch (error) {
-      console.error('Une erreur s\'est produite lors de l\'exécution du script Python :', error);
+      console.error("Erreur lors de la récupération des prédictions :", error);
     }
   };
-  
-  //runPythonScript();
-  
 
-  // À l'intérieur de votre composant Home, utilisez cette fonction lors du clic sur le bouton
   const handleButtonClick = () => {
-    //const inputValue = document.getElementById('searchInput').value;
     runPythonScript();
+  };
+
+  const getModelLabel = (value) => {
+    return value === 0 ? "ChatGPT" : "Humain";
   };
 
   return (
@@ -54,7 +44,6 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={`${styles.main}`}>
-        
         <div className={styles.navbar}>
           <div className={styles.navbarleft}>
             <Image
@@ -76,26 +65,14 @@ export default function Home() {
             />
           </div>
         </div>
-
         <div className={styles.containercards}>
-          <div className={`${styles.card} ${loading ? styles.loading : styles.loaded}`}>
-            <p>XGB</p>
-            {percentages[0] !== null && <p>{percentages[0]}%</p>}
-          </div>
-          <div className={`${styles.card} ${loading ? styles.loading : styles.loaded}`}>
-            <p>LR</p>
-            {percentages[1] !== null && <p>{percentages[1]}%</p>}
-          </div>
-          <div className={`${styles.card} ${loading ? styles.loading : styles.loaded}`}>
-            <p>LLM</p>
-            {percentages[2] !== null && <p>{percentages[2]}%</p>}
-          </div>
-          <div className={`${styles.card} ${loading ? styles.loading : styles.loaded}`}>
-            <p>FNN</p>
-            {percentages[3] !== null && <p>{percentages[3]}%</p>}
-          </div>
+          {Object.entries(predictions).map(([model, value]) => (
+            <div key={model} className={`${styles.card} ${loading ? styles.loading : styles.loaded}`}>
+              <p>{model.toUpperCase()}</p>
+              <p>{getModelLabel(value)}</p>
+            </div>
+          ))}
         </div>
-
         <div className={styles.containersearch}>
           <div className={styles.searchbar}>
             <input id="searchInput" type="text" placeholder="Write a text..." className={styles.inputSearch} />
@@ -108,12 +85,9 @@ export default function Home() {
             />
           </div>
         </div>
-
         <div className={styles.buttonContainer}>
           <button className={styles.computeButton} onClick={handleButtonClick}>COMPUTE &gt;</button>
-          <div>Résultat : {output}</div>
         </div>
-
       </main>
     </>
   );

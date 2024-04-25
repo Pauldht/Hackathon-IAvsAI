@@ -6,11 +6,14 @@ origins = [
     "https://user-amy12-681443-0.user.lab.sspcloud.fr",
     "https://user-amy12-681443-0.user.lab.sspcloud.fr/proxy/8000/post_data_searchbar",
     "https://user-amy12-681443-user.user.lab.sspcloud.fr/", 
-    "http://localhost:3000",
+    "http://localhost:3001",
     "http://localhost:8000/",
-    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
     "http://127.0.0.1:8000",
 ]
+
+
+print("SHOULD BE RUN")
 
 app = FastAPI(openapi_url="/openapi.json")
 app.add_middleware(
@@ -22,7 +25,7 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/test")
 async def root():
     return {"message": "Hello World"}
 
@@ -36,5 +39,6 @@ async def get_data_searchbar():
 @app.post("/get_data_searchbar")
 async def post_data_searchbar(texte: dict):
     # Logique de traitement des données envoyées
+    print("TEST PLS")
     print(texte)
     return texte["texte"]

@@ -1,10 +1,10 @@
-from tensorflow.keras import Model, Input
-from tensorflow.keras.layers import TextVectorization, Embedding, Bidirectional, LSTM
-from tensorflow.keras.layers import Conv1D, GlobalMaxPooling1D, Dense, Dropout
+#from tensorflow.keras import Model, Input
+#from tensorflow.keras.layers import TextVectorization, Embedding, Bidirectional, LSTM
+#from tensorflow.keras.layers import Conv1D, GlobalMaxPooling1D, Dense, Dropout
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 import pandas as pd
-import tensorflow as tf
+#import tensorflow as tf
 import pickle
 import sys
 
@@ -12,7 +12,7 @@ import sys
 
 
 def get_dataset():
-    csv = pd.read_csv("../../data/hack_train.csv")
+    csv = pd.read_csv("../../../data/hack_train.csv")
     csvFull = csv.rename(columns={'text': 'answers', "label": "is_human"})
     answers_df = csvFull.drop(columns="src")
     answers_df = answers_df.explode('answers', ignore_index=True)
@@ -22,6 +22,7 @@ def get_dataset():
 
 # -----------------------Code for LLM-----------------------------------
 
+"""
 max_features = 75000
 embedding_dim = 64
 sequence_length = 512*2
@@ -105,9 +106,12 @@ cv.fit(answers_df["answers"])
 
 # ----------------Functions to call--------------------
 
+import xgboost as xgb
 
-def predict_xgb(input, tfidf):
-    with open('../../model/XGB_89.pickle', 'rb') as file:
+def predict_xgb(input, answers_df):
+    cv = cv = TfidfVectorizer()
+    cv.fit(answers_df["answers"])
+    with open('../../../model/XGB_91.pickle', 'rb') as file:
         loaded_model = pickle.load(file)
     prediction = loaded_model.predict(cv.transform([input]))
     return prediction
@@ -127,16 +131,55 @@ def predict_fnn_amy(input):
     prediction = model.predict(input)
     return prediction
 
+def predict_lr(input):
+    with open('../../model/LogisticRegression.pickle', 'rb') as file:
+        loaded_model = pickle.load(file)
+    prediction = loaded_model.predict([input])
+    return prediction
 
-if __name__ == "__main__":
-    if len(sys.argv) >= 2:
-        text_input = sys.argv[1]
-        model = sys.argv[2]
-        prediction = 0
-        if model == 1:
-            prediction = predict_xgb(text_input)
-        elif model == 2:
-            prediction = predict_llm(text_input, vectorize_layer)
-        else:
-            prediction = predict_fnn_amy(text_input)
-        print(prediction)
+"""
+
+
+def loading_model(text_input, df):
+    prediction_xgb = 1
+    #prediction_llm = predict_llm(text_input, vectorize_layer)
+    #prediction_fn = predict_fnn_amy(text_input)
+    #predict_lr = predict_lr(text_input)
+    return (prediction_xgb, 0, 0)        
+
+
+# BACKEND
+
+from flask import Flask, jsonify
+#import request
+
+app = Flask(__name__)
+
+
+@app.route('/get_prediction', methods=['GET'])
+def get_data():
+
+
+    #text_input = request.args.get('text_input')
+    
+    df = get_dataset()
+    (xgb, llm, fn) = loading_model("Hello this is a test", df)
+    data = {'fnn': fn, 'lr': 1, 'xgb': xgb, 'llm': llm}
+    response = jsonify(data)
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+    return response
+
+@app.route('/test', methods=['GET'])
+def test_data():
+    
+    data = {'fnn': 1, 'lr': 1, 'xgb': 0, 'llm': 1}
+    response = jsonify(data)
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+    return response
+
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=8000, debug=True)
+    print("RUN SERVER")
+
+
