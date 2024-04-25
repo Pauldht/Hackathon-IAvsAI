@@ -33,9 +33,10 @@ def get_dataset():
     return answers_df
 
 
+answers_df = get_dataset()
+
 # -----------------------Code for LLM-----------------------------------
 
-"""
 max_features = 75000
 embedding_dim = 64
 sequence_length = 512*2
@@ -52,6 +53,7 @@ def vectorizer_init(answers_df):
     vectorize_layer.adapt(answers_df['answers'])
     return vectorize_layer
 
+#vectorize_layer = vectorizer_init(answers_df)
 
 class TransformerBlock(tf.keras.layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
@@ -103,17 +105,16 @@ def load_llm_model():
     model = Model(inputs=inputs, outputs=predictions)
     model.summary()
 
-    model.load_weights("../../model/my_model.weights.h5")
+    model.load_weights("../../../model/my_model.weights.h5")
 
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
-
+"""
 # ----------------DIFFERENT VECTORIZER--------------------
 #           MUST BE CALL BEFORE ANY PREDICTION !!!!
 
-answers_df = get_dataset()
-vectorize_layer = vectorizer_init(answers_df)
+
 cv = TfidfVectorizer()
 cv.fit(answers_df["answers"])
 
@@ -191,8 +192,7 @@ def predict_xgb(input, answers_df):
     return prediction
 
 
-"""
-def predict_llm(input, vectorize_layer=vectorize_layer):
+def predict_llm(input):
     model = load_llm_model()
     new_answer_vectorized = vectorize_layer([input]).numpy()
 
@@ -200,7 +200,7 @@ def predict_llm(input, vectorize_layer=vectorize_layer):
     prediction = model.predict(new_answer_vectorized)
     return prediction
 
-"""
+
 def predict_fnn_amy(input):
     doc_vector = document_vector(input, pretrained_wv)
     doc_vector = torch.tensor(doc_vector, dtype=torch.float32).unsqueeze(0)
@@ -218,22 +218,20 @@ def predict_fnn_amy(input):
         return 1
     return 0
 
-"""
+
 def predict_lr(input):
-    with open('../../model/LogisticRegression.pickle', 'rb') as file:
+    with open('../../../model/LogisticRegression.pickle', 'rb') as file:
         loaded_model = pickle.load(file)
     prediction = loaded_model.predict([input])
     return prediction
 
-"""
-
 
 def loading_model(text_input, df):
     prediction_xgb = 1#predict_xgb(text_input, df)
-    #prediction_llm = predict_llm(text_input, vectorize_layer)
-    prediction_fn = predict_fnn_amy(text_input)
-    #predict_lr = predict_lr(text_input)
-    return (prediction_xgb, 0, prediction_fn)        
+    prediction_llm = 1#predict_llm(text_input)
+    prediction_fn = 1#predict_fnn_amy(text_input)
+    predict_lr = 0#predict_lr(text_input)
+    return [prediction_xgb, prediction_llm, prediction_fn, predict_lr]     
 
 
 # BACKEND
@@ -251,8 +249,8 @@ def get_data():
     #text_input = request.args.get('text_input')
     
     df = get_dataset()
-    (xgb, llm, fn) = loading_model("Hello this is a test", df)
-    data = {'fnn': str(fn), 'lr': '1', 'xgb': str(xgb), 'llm': str(llm)}
+    predi = loading_model("Hello this is a test", df)
+    data = {'fnn': str(predi[2]), 'lr': str(predi[3]), 'xgb': str(predi[0]), 'llm': str(predi[1])}
     response = jsonify(data)
     response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
     return response
