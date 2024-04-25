@@ -20,7 +20,9 @@ export default function Home() {
 
   const runPythonScript = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/test");
+      console.log("INSIDE")
+      const response = await axios.get("http://127.0.0.1:8000/get_prediction");
+      console.log(response)
       setPredictions(response.data);
     } catch (error) {
       console.error("Erreur lors de la récupération des prédictions :", error);
