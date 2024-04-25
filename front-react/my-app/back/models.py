@@ -237,7 +237,7 @@ def loading_model(text_input, df):
 # BACKEND
 
 from flask import Flask, jsonify
-#import request
+import request
 
 app = Flask(__name__)
 
@@ -245,11 +245,9 @@ app = Flask(__name__)
 @app.route('/get_prediction', methods=['GET'])
 def get_data():
 
-
-    #text_input = request.args.get('text_input')
-    
+    text_input = request.args.get('text_input')    
     df = get_dataset()
-    predi = loading_model("Hello this is a test", df)
+    predi = loading_model(text_input, df)
     data = {'fnn': str(predi[2]), 'lr': str(predi[3]), 'xgb': str(predi[0]), 'llm': str(predi[1])}
     response = jsonify(data)
     response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')

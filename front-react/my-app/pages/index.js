@@ -11,10 +11,12 @@ export default function Home() {
   const [predictions, setPredictions] = useState({ fnn: -1, llm: -1, lr: -1, xgb: -1 });
   const [loading, setLoading] = useState(false);
 
+  const input_ = useState('');
+
   const runPythonScript = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://127.0.0.1:8000/get_prediction");
+      const response = await axios.get(`http://127.0.0.1:8000/get_prediction?text_input=${input_}`);
       console.log(response.data);
       setPredictions(response.data);
       setLoading(false);
@@ -34,6 +36,10 @@ export default function Home() {
 
   const getCardColor = (value) => {
     return value === -1 ? '' : (value === 0 ? styles.redCard : styles.greenCard);
+  };
+
+  const handleChange = (event) => {
+    setInputValue(event.target.value); // Mettre à jour la valeur du champ de texte
   };
 
   return (
@@ -76,7 +82,7 @@ export default function Home() {
           </div>
           <div className={styles.containersearch}>
             <div className={styles.searchbar}>
-              <input id="searchInput" type="text" placeholder="Write a text..." className={styles.inputSearch} />
+              <input id="searchInput" type="text" placeholder="Write a text..." className={styles.inputSearch} value={input_} onChange={hangleChange} />
               <Image
                   src="/logohack.png"
                   alt="Minarm Logo"
@@ -85,6 +91,8 @@ export default function Home() {
                   className={styles.searchicon}
               />
             </div>
+
+
           </div>
           <div className={styles.buttonContainer}>
             <button className={styles.computeButton} onClick={handleButtonClick}>COMPUTE &gt;</button>
