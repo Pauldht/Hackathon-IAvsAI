@@ -1,27 +1,34 @@
-from tensorflow.keras import Model, Input, layers
-from tensorflow.keras.layers import TextVectorization, Embedding, Bidirectional, LSTM, Conv1D, GlobalMaxPooling1D, Dense, Dropout
+from tensorflow.keras import Model, Input
+from tensorflow.keras.layers import TextVectorization, Embedding, Bidirectional, LSTM
+from tensorflow.keras.layers import Conv1D, GlobalMaxPooling1D, Dense, Dropout
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 import pandas as pd
 import tensorflow as tf
+import pickle
+import sys
+
+# -----------------------Code Utils-----------------------------------
+
+
+def get_dataset():
+    csv = pd.read_csv("../../data/hack_train.csv")
+    csvFull = csv.rename(columns={'text': 'answers', "label": "is_human"})
+    answers_df = csvFull.drop(columns="src")
+    answers_df = answers_df.explode('answers', ignore_index=True)
+    answers_df = answers_df.dropna(subset=['answers'], ignore_index=True)
+    return answers_df
 
 
 # -----------------------Code for LLM-----------------------------------
-
 
 max_features = 75000
 embedding_dim = 64
 sequence_length = 512*2
 
 
-def vectorizer_init():
-    csv = pd.read_csv("/kaggle/input/hack-train/hack_train.csv")
-    csvFull = csv.rename(columns={'text': 'answers', "label": "is_human"})
-    answers_df = csvFull.drop(columns="src")
-    # Checking the len
-    answers_df = answers_df.explode('answers', ignore_index=True)
-    answers_df = answers_df.dropna(subset=['answers'], ignore_index=True)
-
-    vectorize_layer = tf.keras.layers.TextVectorization(
+def vectorizer_init(answers_df):
+    vectorize_layer = TextVectorization(
         max_tokens=max_features,
         ngrams=(3, 5),
         output_mode="int",
@@ -88,16 +95,48 @@ def load_llm_model():
     return model
 
 
-vectorize_layer = vectorizer_init()
+# ----------------DIFFERENT VECTORIZER--------------------
+#           MUST BE CALL BEFORE ANY PREDICTION !!!!
+
+answers_df = get_dataset()
+vectorize_layer = vectorizer_init(answers_df)
+cv = TfidfVectorizer()
+cv.fit(answers_df["answers"])
+
+# ----------------Functions to call--------------------
 
 
-# ----------------Functions to call in j---------------------
+def predict_xgb(input, tfidf):
+    with open('../../model/XGB_89.pickle', 'rb') as file:
+        loaded_model = pickle.load(file)
+    prediction = loaded_model.predict(cv.transform([input]))
+    return prediction
 
 
-def call_llm(input, vectorize_layer=vectorize_layer):
+def predict_llm(input, vectorize_layer=vectorize_layer):
     model = load_llm_model()
-    new_answer_vectorized = vectorize_layer([input]).numpy()  # TODO: add input answer
+    new_answer_vectorized = vectorize_layer([input]).numpy()
 
     # Predict the label
     prediction = model.predict(new_answer_vectorized)
     return prediction
+
+
+def predict_fnn_amy(input):
+    model = tf.keras.models.load_model('../../model/fnn-amy.keras')
+    prediction = model.predict(input)
+    return prediction
+
+
+if __name__ == "__main__":
+    if len(sys.argv) >= 2:
+        text_input = sys.argv[1]
+        model = sys.argv[2]
+        prediction = 0
+        if model == 1:
+            prediction = predict_xgb(text_input)
+        elif model == 2:
+            prediction = predict_llm(text_input, vectorize_layer)
+        else:
+            prediction = predict_fnn_amy(text_input)
+        print(prediction)
