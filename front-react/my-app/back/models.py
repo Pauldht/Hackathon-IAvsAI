@@ -1,15 +1,28 @@
-#from tensorflow.keras import Model, Input
-#from tensorflow.keras.layers import TextVectorization, Embedding, Bidirectional, LSTM
-#from tensorflow.keras.layers import Conv1D, GlobalMaxPooling1D, Dense, Dropout
+from tensorflow.keras.layers import Conv1D, GlobalMaxPooling1D, Dense, Dropout
+from tensorflow.keras import Model, Input
+from tensorflow.keras.layers import TextVectorization, Embedding, Bidirectional, LSTM
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 import pandas as pd
-#import tensorflow as tf
+import tensorflow as tf
 import pickle
 import sys
 
+import torch
+import torch.nn.init as init
+import torch.nn as nn
+
+import gensim.downloader
+
+from nltk.tokenize import word_tokenize, sent_tokenize
+import numpy as np
+import torch.nn.functional as F
+import nltk
+nltk.download('punkt')
+
 # -----------------------Code Utils-----------------------------------
 
+pretrained_wv = gensim.downloader.load('glove-twitter-100')
 
 def get_dataset():
     csv = pd.read_csv("../../../data/hack_train.csv")
@@ -104,7 +117,68 @@ vectorize_layer = vectorizer_init(answers_df)
 cv = TfidfVectorizer()
 cv.fit(answers_df["answers"])
 
+pretrained_wv = gensim.downloader.load('glove-twitter-100')
+
+
 # ----------------Functions to call--------------------
+"""
+
+class MultiLayerPerceptron2(nn.Module):
+    def __init__(self, vocab_size, hidden_dim, num_classes):
+        super(MultiLayerPerceptron2, self).__init__()
+        self.fc1 = nn.Linear(vocab_size, hidden_dim) # Layer
+        self.relu1 = nn.ReLU()                      # Activation
+        self.dropout1 = nn.Dropout(p=0.1)           #Dropout
+
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim//2) # Layer
+        self.relu2 = nn.ReLU()# Activation
+        self.dropout2 = nn.Dropout(p=0.1)#Dropout
+
+        self.batch1 = nn.BatchNorm1d(hidden_dim//2) #Normalisation
+
+        self.fc5 = nn.Linear(hidden_dim//2, num_classes) # Layer
+        self.sigmoid = nn.Sigmoid()# Activation
+
+    
+        # weight initialisation
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                init.kaiming_uniform_(m.weight)
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu1(x)
+        x = self.dropout1(x)
+
+        x = self.fc2(x)
+        x = self.relu2(x)
+        x = self.dropout2(x)
+
+        x = self.batch1(x)
+         
+        x = self.fc5(x)
+        x = self.sigmoid(x)
+        return x
+    
+def predict_fnn():
+    model = MultiLayerPerceptron2(100, 128, 2) #0.87 0.87 0.87
+    model.load_state_dict(torch.load("../../../model/fnn1.pth"))
+    model.eval()
+    return model
+    
+def document_vector(doc, wv):
+  """Create document vectors by averaging word vectors."""
+  words = word_tokenize(doc)
+  word_vectors = np.array([wv[word] for word in words if word in wv])
+  
+  if len(word_vectors) == 0:
+      return np.zeros(wv.vector_size)
+  return np.mean(word_vectors, axis=0)
+
+# -----------------------Code for FNN-----------------------------------
+
 
 import xgboost as xgb
 
@@ -117,6 +191,7 @@ def predict_xgb(input, answers_df):
     return prediction
 
 
+"""
 def predict_llm(input, vectorize_layer=vectorize_layer):
     model = load_llm_model()
     new_answer_vectorized = vectorize_layer([input]).numpy()
@@ -125,12 +200,25 @@ def predict_llm(input, vectorize_layer=vectorize_layer):
     prediction = model.predict(new_answer_vectorized)
     return prediction
 
-
+"""
 def predict_fnn_amy(input):
-    model = tf.keras.models.load_model('../../model/fnn-amy.keras')
-    prediction = model.predict(input)
-    return prediction
+    doc_vector = document_vector(input, pretrained_wv)
+    doc_vector = torch.tensor(doc_vector, dtype=torch.float32).unsqueeze(0)
 
+    model = predict_fnn()
+
+    with torch.no_grad():
+        model.eval()
+        output = model(doc_vector)
+
+    # Appliquer softmax pour obtenir des probabilités
+    probabilities = F.softmax(output, dim=1)
+    proba =  max(probabilities[0][0], probabilities[0][1])
+    if (proba > 0.50):
+        return 1
+    return 0
+
+"""
 def predict_lr(input):
     with open('../../model/LogisticRegression.pickle', 'rb') as file:
         loaded_model = pickle.load(file)
@@ -141,11 +229,11 @@ def predict_lr(input):
 
 
 def loading_model(text_input, df):
-    prediction_xgb = 1
+    prediction_xgb = 1#predict_xgb(text_input, df)
     #prediction_llm = predict_llm(text_input, vectorize_layer)
-    #prediction_fn = predict_fnn_amy(text_input)
+    prediction_fn = predict_fnn_amy(text_input)
     #predict_lr = predict_lr(text_input)
-    return (prediction_xgb, 0, 0)        
+    return (prediction_xgb, 0, prediction_fn)        
 
 
 # BACKEND
@@ -164,7 +252,7 @@ def get_data():
     
     df = get_dataset()
     (xgb, llm, fn) = loading_model("Hello this is a test", df)
-    data = {'fnn': fn, 'lr': 1, 'xgb': xgb, 'llm': llm}
+    data = {'fnn': str(fn), 'lr': '1', 'xgb': str(xgb), 'llm': str(llm)}
     response = jsonify(data)
     response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
     return response
@@ -181,5 +269,3 @@ def test_data():
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8000, debug=True)
     print("RUN SERVER")
-
-
