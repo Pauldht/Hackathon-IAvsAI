@@ -1,10 +1,14 @@
 .main {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  /*justify-content: space-between;
   align-items: center;
   padding: 6rem;
-  min-height: 100vh;
+  min-height: 100vh;*/
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: black;
+  font-weight: 100;
+
 }
 
 .description {
@@ -227,3 +231,166 @@
     transform: rotate(0deg);
   }
 }
+
+.navbar{
+  display: flex; 
+  align-items: center;
+  padding: 15px;
+  background-color: white;
+  border-radius: 0 0 40px 40px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ajoute une ombre douce */
+
+}
+
+.navbarleft{
+  margin-right: auto;
+  display: contents;
+
+
+}
+
+.navbarright{
+  margin-left: auto; 
+}
+
+.logominarm{
+
+  padding-right: 40px;
+  width: auto;
+
+}
+
+.text {
+  font-size: 36px;}
+
+.logohack{
+  transition: transform 0.3s ease;
+
+}
+
+.logohack:hover{
+  transform: scale(1.2);
+
+}
+
+.containercards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 50px;}
+
+  .card {
+    width: 300px;
+    height: 350px;
+    background-color: white;
+    margin: 15px; /* Marge entre les cartes */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ajoute une ombre douce */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s ease, opacity 0.3s ease; /* Ajoute une transition pour l'animation */
+  }
+  
+  .loaded {
+    transform: translateY(-10px); /* Déplace la carte vers le haut lorsqu'elle est chargée */
+    opacity: 1; /* Assurez-vous que la carte est visible lorsque chargée */
+  }
+  
+  .loading {
+    opacity: 0.5; /* Cachez la carte tant qu'elle est en train de charger */
+  }
+  
+
+.card > p {
+font-size: 50px;
+font-weight: 200;
+margin: 20px;
+display: flex;
+justify-content: center; /* Centre horizontalement */
+align-items: center; /* Centre verticalement */
+margin-top: 30px;
+}
+
+.containersearch {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+.searchbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid white;
+  border-radius: 28px;
+  background-color: white;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.inputSearch {
+  width: 645px;
+  font-size: 17px;
+  font-weight: 100;  height: 30px;
+  border: none;
+  outline: none;
+  padding: 0 10px;
+  border-radius: 20px;
+  margin-right: 8px; /* Ajoute une marge à droite pour séparer l'input de l'icône */
+}
+
+.searchicon {
+  width: 30px;
+  height: 30px;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: transform 0.3s ease; /* Ajout de transition pour l'effet de rotation */
+}
+
+.searchicon:hover {
+  transform: rotate(360deg); /* Rotation de 360 degrés au survol */
+  transform-origin: center center; /* Définit le point de rotation au centre de l'image */
+}
+
+.computeButton {
+  position: absolute;
+  width: 580px;
+  height: 73px;
+  background-image: linear-gradient(0deg, rgba(53.00000064074993, 6.000000117346644, 40.00000141561031, 1) 0%, rgba(53.00000064074993, 8.000000473111868, 46.000001057982445, 1) 36.500000953674316%, rgba(51.00000075995922, 23.000000528991222, 57.00000040233135, 1) 67.5000011920929%);
+  width: 575px;
+  height: 71px;
+  border-top-left-radius: 36px;
+  border-top-right-radius: 36px;
+  border-bottom-left-radius: 36px;
+  border-bottom-right-radius: 36px;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 71px; /* Centrer verticalement le texte */
+  cursor: pointer; /* Afficher un curseur au survol */
+  transition: box-shadow 0.3s;
+  overflow: hidden;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px; /* Ajustez la hauteur selon vos besoins */
+  
+}
+
+  .computeButton:hover {
+    box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.3); /* Ajout d'une légère ombre en bas */
+  }
+
+
+
+
+
+
+
