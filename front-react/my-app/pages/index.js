@@ -110,6 +110,8 @@ export default function Home() {
                   className={styles.searchicon}
               />
             </div>
+
+
           </div>
           <div className={styles.buttonContainer}>
             <button className={styles.computeButton} onClick={handleButtonClick}>COMPUTE &gt;</button>
