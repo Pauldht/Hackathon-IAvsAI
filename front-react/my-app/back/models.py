@@ -7,6 +7,7 @@ import pandas as pd
 import tensorflow as tf
 import pickle
 import sys
+import os
 
 import torch
 import torch.nn.init as init
@@ -19,6 +20,8 @@ import numpy as np
 import torch.nn.functional as F
 import nltk
 nltk.download('punkt')
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 # -----------------------Code Utils-----------------------------------
 
@@ -105,7 +108,7 @@ def load_llm_model():
     model = Model(inputs=inputs, outputs=predictions)
     model.summary()
 
-    model.load_weights("../../../model/my_model.weights.h5")
+    model.load_weights("../../../model/my_model2.weights.h5")
 
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model
@@ -184,11 +187,9 @@ def document_vector(doc, wv):
 import xgboost as xgb
 
 def predict_xgb(input, answers_df):
-    cv = cv = TfidfVectorizer()
-    cv.fit(answers_df["answers"])
-    with open('../../../model/XGB_91.pickle', 'rb') as file:
+    with open('../../../model/XGBFINAL3.pickle', 'rb') as file:
         loaded_model = pickle.load(file)
-    prediction = loaded_model.predict(cv.transform([input]))
+    prediction = loaded_model.predict([input])[0]
     return prediction
 
 
@@ -222,38 +223,45 @@ def predict_fnn_amy(input):
 def predict_lr(input):
     with open('../../../model/LogisticRegression.pickle', 'rb') as file:
         loaded_model = pickle.load(file)
-    prediction = loaded_model.predict([input])
+    prediction = loaded_model.predict([input])[0]
     return prediction
 
 
 def loading_model(text_input, df):
-    prediction_xgb = 1#predict_xgb(text_input, df)
-    prediction_llm = 1#predict_llm(text_input)
-    prediction_fn = 1#predict_fnn_amy(text_input)
-    predict_lr = 0#predict_lr(text_input)
-    return [prediction_xgb, prediction_llm, prediction_fn, predict_lr]     
+    prediction_xgb = predict_xgb(text_input, df)
+    print("XGB", prediction_xgb)
+    prediction_llm = 0#predict_llm(text_input)
+    prediction_fn = predict_fnn_amy(text_input)
+    print("FNN", prediction_fn)
+    prediction_lr = predict_lr(text_input)
+    print("LR", prediction_lr)
+    return [prediction_xgb, prediction_lr, prediction_fn, prediction_lr]     
 
 
 # BACKEND
 
-from flask import Flask, jsonify
-#import request
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
 
 @app.route('/get_prediction', methods=['GET'])
 def get_data():
-
-
-    #text_input = request.args.get('text_input')
+    text_input = request.args.get('text')  # Correction ici
+    print(text_input)
     
     df = get_dataset()
-    predi = loading_model("Hello this is a test", df)
-    data = {'fnn': str(predi[2]), 'lr': str(predi[3]), 'xgb': str(predi[0]), 'llm': str(predi[1])}
+    predi = loading_model(text_input, df)  # Utilisation de text_input ici
+    # Convertir les valeurs int64 en entiers standard
+    predi = [int(value) for value in predi]
+    
+    # Créer le dictionnaire data avec les valeurs converties
+    data = {'fnn': predi[2], 'lr': predi[3], 'xgb': predi[0], 'llm': predi[1]}
+    print (data)
     response = jsonify(data)
     response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
     return response
+
 
 @app.route('/test', methods=['GET'])
 def test_data():
